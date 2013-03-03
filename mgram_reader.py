@@ -29,9 +29,7 @@ class TemperatureReader:
             if (0, 0, 0) == self.image.getpixel((x, self.time_y)):
                 if len(times) == 0:
                     number = self.image.crop((x - 8, self.time_y - 20, x + 8, self.time_y - 8))
-                    string =  int(self.__ocr_image(number))
-                    date = datetime.now()
-                    times.append((x, date.replace(hour=int(), minute=0, second=0, microsecond=0)))
+                    times.append((x, datetime.now().replace(hour=int(self.__ocr_image(number)), minute=0)))
                 else:
                     times.append((x, (times[-1][1] + timedelta(minutes=self.step))))
 
@@ -48,24 +46,24 @@ class TemperatureReader:
 
     def read(self, date_as_string=False):
         temperatures = []
+        scale = self.__get_scale()
+        times = self.__get_times()
         for x in self.x_range:
             for y in self.y_range:
                 if self.pixel == self.image.getpixel((x,y)):
                     prev = None
-                    for touple in self.__get_scale():
-                        if touple[0] >= y:
-                            temperature = round((touple[1] - prev[1]) * (float(y - prev[0]) / float(touple[0] - prev[0])), 1)
-                            if touple[1] >= 0.0:
-                                temperature = temperature * -1.0
-                            break
-                        prev = touple
-                    prev = None
-                    for touple in self.__get_times():
+                    for touple in times:
                         if touple[0] >= x:
                             minutes = round(self.step * (float(x - prev[0]) / float(touple[0] - prev[0])))
                             time = prev[1] + timedelta(minutes=minutes)
                         prev = touple
-                    temperatures.append((time.strftime('%m-%d %H:%M') if date_as_string else time,temperature))
+                    prev = None
+                    for touple in scale:
+                        if touple[0] >= y:
+                            temp = round(prev[1] - abs(touple[1] - prev[1]) * ((float(y - prev[0]) / float(touple[0] - prev[0]))), 1)
+                            break
+                        prev = touple
+                    temperatures.append((time.strftime('%m-%d %H:%M') if date_as_string else time,temp))
                     break
 
         return temperatures
