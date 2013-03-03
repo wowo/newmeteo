@@ -1,9 +1,7 @@
 #!/usr/bin/python
 
-from PIL import Image
 from datetime import datetime,timedelta
 import os
-import urllib
 
 class TemperatureReader:
 
@@ -48,7 +46,7 @@ class TemperatureReader:
 
         return scale
 
-    def read(self):
+    def read(self, date_as_string=False):
         temperatures = []
         for x in self.x_range:
             for y in self.y_range:
@@ -67,14 +65,7 @@ class TemperatureReader:
                             minutes = round(self.step * (float(x - prev[0]) / float(touple[0] - prev[0])))
                             time = prev[1] + timedelta(minutes=minutes)
                         prev = touple
-                    temperatures.append((time,temperature))
+                    temperatures.append((time.strftime('%m-%d %H:%M') if date_as_string else time,temperature))
                     break
 
         return temperatures
-
-row = 463
-col = 211
-file = '/tmp/mgram_%d_%d.png' % (row, col)
-urllib.urlretrieve('http://new.meteo.pl/um/metco/mgram_pict.php?ntype=0u&row=%d&col=%d&lang=pl' % (row, col), file)
-reader = TemperatureReader(Image.open(file, 'r').convert('RGB'))
-print reader.read()
