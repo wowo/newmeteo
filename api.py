@@ -28,4 +28,5 @@ def chart():
     return render_template('chart.html')
 
 if __name__ == "__main__" and len(sys.argv) == 1:
-    app.run(host='0.0.0.0', debug=True)
+    #app.run(host='0.0.0.0', debug=True)
+    app.run(host='91.227.39.112', port=8000, debug=True)

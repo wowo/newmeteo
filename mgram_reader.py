@@ -9,6 +9,7 @@ class TemperatureReader:
     y_range = range(30, 133)
     pixel = (255, 0, 0)
     scale_x = 64
+    scale_y = 59
     time_y = 61
     step = 180
     image = None
@@ -16,10 +17,10 @@ class TemperatureReader:
     def __init__(self, image):
         self.image = image
 
-    def __ocr_image(self, image):
-        file = '/tmp/ocr_image.png'
+    def __ocr_image(self, image, suffix=''):
+        file = '/tmp/ocr_image%s.png' % suffix
         image.save(file)
-        string = os.popen('gocr -C \'0123456789--\' -i %s' % file).read()
+        string = os.popen('PATH=$PATH:/home/wowo/www/bin && gocr -C \'0123456789--\' -i %s' % file).read()
 
         return string
 
@@ -37,10 +38,15 @@ class TemperatureReader:
 
     def __get_scale(self):
         scale = []
-        for y in self.y_range:
+        number = self.image.crop((self.scale_x - 27, self.y_range[0] + 30, self.scale_x - 7, self.y_range[-1] + 5))
+        numbers = self.__ocr_image(number, 'x').split("\n")
+
+        counter = 0
+        for y in range(self.scale_y, self.y_range[-1]):
             if (0, 0, 0) == self.image.getpixel((self.scale_x, y)) and y - 1 not in scale:
-                number = self.image.crop((self.scale_x - 27, y - 4, self.scale_x - 7, y + 10))
-                scale.append((y, float(self.__ocr_image(number))))
+                if '' != numbers[counter]:
+                    scale.append((y, float(numbers[counter])))
+                counter = counter + 1
 
         return scale
 
@@ -59,7 +65,7 @@ class TemperatureReader:
                         prev = touple
                     prev = None
                     for touple in scale:
-                        if touple[0] >= y:
+                        if touple[0] >= y and prev:
                             temp = round(prev[1] - abs(touple[1] - prev[1]) * ((float(y - prev[0]) / float(touple[0] - prev[0]))), 1)
                             break
                         prev = touple
