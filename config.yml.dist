@@ -1,0 +1,7 @@
+database:
+    host: 'linus.mongohq.com'
+    port: 10087
+    user: secret
+    pass: secret
+    collection: newmeteo
+
