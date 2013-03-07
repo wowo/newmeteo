@@ -34,7 +34,7 @@ def store(rows, cols):
     collection = getCollection()
     dates = []
     for row in getReader(rows, cols).read()[1:]:
-        date = row[0].replace(minute = ((row[0].minute / 10) * 10))
+        date = row[0].replace(minute = ((row[0].minute / 10) * 10), second=0, microsecond=0)
         if date not in dates:
             dates.append(date)
             document = collection.find_one({
