@@ -38,7 +38,7 @@ class TemperatureReader:
 
     def __get_scale(self):
         scale = []
-        number = self.image.crop((self.scale_x - 27, self.y_range[0] + 30, self.scale_x - 7, self.y_range[-1] + 5))
+        number = self.image.crop((self.scale_x - 27, self.y_range[0] + 25, self.scale_x - 7, self.y_range[-1] + 5))
         numbers = self.__ocr_image(number, 'x').split("\n")
 
         counter = 0
@@ -50,7 +50,7 @@ class TemperatureReader:
 
         return scale
 
-    def read(self, date_as_string=False):
+    def read(self):
         temperatures = []
         scale = self.__get_scale()
         times = self.__get_times()
@@ -69,7 +69,7 @@ class TemperatureReader:
                             temp = round(prev[1] - abs(touple[1] - prev[1]) * ((float(y - prev[0]) / float(touple[0] - prev[0]))), 1)
                             break
                         prev = touple
-                    temperatures.append((time.strftime('%m-%d %H:%M') if date_as_string else time,temp))
+                    temperatures.append((time,temp))
                     break
 
         return temperatures

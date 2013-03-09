@@ -20,9 +20,10 @@ def fetch(rows, cols):
     print result.count()
     data = [('Data', 'Prognoza')]
     for temperature in result:
-        data.append((temperature['date'].strftime('%m-%d %H:%M'), float(temperature['temperature'])))
+        data.append((temperature['date'], float(temperature['temperature'])))
 
-    return json.dumps(data)
+    dthandler = lambda obj: obj.isoformat() if isinstance(obj, datetime) else None
+    return json.dumps(data, default=dthandler)
 
 
 @app.route('/')
@@ -33,6 +34,7 @@ def chart():
 def store(rows, cols):
     collection = getCollection()
     dates = []
+    stats = {'inserted': 0, 'updated': 0}
     for row in getReader(rows, cols).read()[1:]:
         date = row[0].replace(minute = ((row[0].minute / 10) * 10), second=0, microsecond=0)
         if date not in dates:
@@ -49,7 +51,12 @@ def store(rows, cols):
                     'location': {'rows': rows, 'cols': cols},
                     'temperature': row[1]
                 }
+                stats['inserted'] += 1
+            else:
+                stats['updated'] += 1
             collection.save(document)
+
+    return stats
 
 
 def getReader(rows, cols):
@@ -78,4 +85,5 @@ if __name__ == "__main__" and len(sys.argv) == 1:
     #app.run(host='0.0.0.0', debug=True)
     app.run(host='91.227.39.112', port=8000, debug=True)
 elif sys.argv[1] == '--store':
-    store(int(sys.argv[2]), int(sys.argv[3]))
+    stats = store(int(sys.argv[2]), int(sys.argv[3]))
+    print '[%s] newmeteo store method, update: %d, insert: %d' % (datetime.now().strftime('%Y-%m-%d %H:%m'), stats['updated'], stats['inserted'])
