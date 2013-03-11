@@ -43,13 +43,13 @@ def store(rows, cols):
                 'date': date,
                 'location.rows': rows,
                 'location.cols': cols,
-                'temperature': {'$ne': row[1]}
+                'temperature': {'$ne': round(row[1], 1)}
             })
             if not document:
                 document = {
                     'date': date,
                     'location': {'rows': rows, 'cols': cols},
-                    'temperature': row[1]
+                    'temperature': round(row[1], 1)
                 }
                 stats['inserted'] += 1
             else:
@@ -60,10 +60,8 @@ def store(rows, cols):
 
 
 def getReader(rows, cols):
-    delta = datetime.now() - timedelta(hours=3)
     file = '/tmp/mgram_%d_%d.png' % (rows, cols)
-    if not os.path.exists(file) or datetime.fromtimestamp(os.path.getmtime(file)) < delta:
-        urllib.urlretrieve('http://new.meteo.pl/um/metco/mgram_pict.php?ntype=0u&row=%d&col=%d&lang=pl' % (rows, cols), file)
+    urllib.urlretrieve('http://new.meteo.pl/um/metco/mgram_pict.php?ntype=0u&row=%d&col=%d&lang=pl' % (rows, cols), file)
 
     return TemperatureReader(Image.open(file, 'r').convert('RGB'))
 
