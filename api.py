@@ -34,26 +34,20 @@ def chart():
 def store(rows, cols):
     collection = getCollection()
     dates = []
-    stats = {'inserted': 0, 'updated': 0}
-    for row in getReader(rows, cols).read()[1:]:
+    stats = {'inserted': 0, 'updated': 0, 'removed': 0}
+    forecast = getReader(rows, cols).read()
+    date = forecast[1][0].replace(minute = ((forecast[1][0].minute / 10) * 10), second=0, microsecond=0)
+    stats['removed'] = collection.remove({'date': {'$gte': date}})['n']
+    for row in forecast[1:]:
         date = row[0].replace(minute = ((row[0].minute / 10) * 10), second=0, microsecond=0)
         if date not in dates:
             dates.append(date)
-            document = collection.find_one({
+            document = {
                 'date': date,
-                'location.rows': rows,
-                'location.cols': cols,
-                'temperature': {'$ne': round(row[1], 1)}
-            })
-            if not document:
-                document = {
-                    'date': date,
-                    'location': {'rows': rows, 'cols': cols},
-                    'temperature': round(row[1], 1)
-                }
-                stats['inserted'] += 1
-            else:
-                stats['updated'] += 1
+                'location': {'rows': rows, 'cols': cols},
+                'temperature': round(row[1], 1)
+            }
+            stats['inserted'] += 1
             collection.save(document)
 
     return stats
@@ -84,4 +78,4 @@ if __name__ == "__main__" and len(sys.argv) == 1:
     app.run(host='91.227.39.112', port=8000, debug=True)
 elif sys.argv[1] == '--store':
     stats = store(int(sys.argv[2]), int(sys.argv[3]))
-    print '[%s] newmeteo store method, update: %d, insert: %d' % (datetime.now().strftime('%Y-%m-%d %H:%m'), stats['updated'], stats['inserted'])
+    print '[%s] newmeteo store method, update: %d, insert: %d, removed: %d' % (datetime.now().strftime('%Y-%m-%d %H:%m'), stats['updated'], stats['inserted'], stats['removed'])
