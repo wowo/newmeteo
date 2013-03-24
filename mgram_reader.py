@@ -22,7 +22,7 @@ class TemperatureReader:
         image.save(file)
         string = os.popen('PATH=$PATH:/home/wowo/www/bin && gocr -C \'0123456789--\' -i %s' % file).read()
 
-        return string
+        return string.replace(' ', '')
 
     def __get_times(self):
         times = []
@@ -38,7 +38,7 @@ class TemperatureReader:
 
     def __get_scale(self):
         scale = []
-        number = self.image.crop((self.scale_x - 27, self.y_range[0] + 25, self.scale_x - 7, self.y_range[-1] + 5))
+        number = self.image.crop((self.scale_x - 27, self.y_range[0] + 20, self.scale_x - 7, self.y_range[-1] + 5))
         numbers = self.__ocr_image(number, 'x').split("\n")
 
         counter = 0
